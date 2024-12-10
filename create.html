@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create a New Hero</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Create a New Hero</h1>
+      <form id="create-hero-form">
+        <label class="hero-1" for="name">Name:</label>
+        <input class="input" type="text" id="name" required />
+
+        <label class="hero-1" for="power">Power:</label>
+        <input class="input" type="number" id="power" required />
+
+        <label class="hero-2" for="description">Description:</label>
+        <input class="input" type="text" id="description" required />
+
+        <label class="hero-2" for="image">Image URL:</label>
+        <input class="input" type="text" id="image" required />
+
+        <button type="submit">Add Hero</button>
+      </form>
+      <div id="message"></div>
+      <!-- Для повідомлень про успіх чи помилки -->
+    </div>
+
+    <script>
+      document
+        .getElementById("create-hero-form")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const hero = {
+            name: document.getElementById("name").value,
+            power: parseFloat(document.getElementById("power").value),
+            description: document.getElementById("description").value,
+            image: document.getElementById("image").value,
+          };
+
+          try {
+            const response = await fetch("http://localhost:3000/heros", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(hero),
+            });
+
+            if (response.ok) {
+              document.getElementById("message").textContent =
+                "Hero added successfully!";
+            } else {
+              document.getElementById("message").textContent =
+                "Error adding hero.";
+            }
+          } catch (error) {
+            document.getElementById("message").textContent =
+              "Network error: " + error.message;
+          }
+        });
+    </script>
+  </body>
+</html>

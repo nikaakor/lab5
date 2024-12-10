@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Hero</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Edit Hero</h1>
+      <form id="edit-hero-form">
+        <label for="hero-select">Select Hero to Edit:</label>
+        <select id="hero-select" required></select>
+
+        <label for="name">New Name:</label>
+        <input type="text" id="name" required />
+
+        <label for="power">New Power:</label>
+        <input type="number" id="power" required />
+
+        <label for="description">New Description:</label>
+        <input type="text" id="description" required />
+
+        <label for="image">New Image URL:</label>
+        <input type="text" id="image" required />
+
+        <button type="submit">Edit Hero</button>
+      </form>
+      <div id="message"></div>
+      <!-- Для повідомлень про успіх чи помилки -->
+    </div>
+
+    <script>
+      // Завантаження списку у вибір (select)
+      const loadHeros = async () => {
+        try {
+          const response = await fetch("http://localhost:3000/heros");
+          const heros = await response.json();
+
+          const heroSelect = document.getElementById("hero-select");
+          heroSelect.innerHTML = ""; // Очищає список
+
+          heros.forEach((hero) => {
+            const option = document.createElement("option");
+            option.value = hero.id;
+            option.text = hero.name;
+            heroSelect.appendChild(option);
+          });
+        } catch (error) {
+          console.error("Error loading heros:", error);
+        }
+      };
+
+      // Завантаження героїв при ініціалізації
+      loadHeros();
+
+      // Обробка форми редагування
+      document
+        .getElementById("edit-hero-form")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const heroId = document.getElementById("hero-select").value;
+          const updatedHero = {
+            name: document.getElementById("name").value,
+            power: parseFloat(document.getElementById("power").value),
+            description: document.getElementById("description").value,
+            image: document.getElementById("image").value,
+          };
+
+          try {
+            const response = await fetch(
+              `http://localhost:3000/heros/${heroId}`,
+              {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedHero),
+              }
+            );
+
+            if (response.ok) {
+              document.getElementById("message").textContent =
+                "Hero updated successfully!";
+              loadHeros(); // Оновлення списку після редагування
+            } else {
+              document.getElementById("message").textContent =
+                "Error updating hero.";
+            }
+          } catch (error) {
+            document.getElementById("message").textContent =
+              "Network error: " + error.message;
+          }
+        });
+    </script>
+  </body>
+</html>

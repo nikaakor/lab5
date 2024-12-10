@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HERO</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Hero</h1>
+
+      <div class="controls">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search for a hero..."
+          oninput="searchCard()"
+        />
+        <button onclick="clearSearch()">Clear Search</button>
+        <a href="create.html"><button>Create New Hero</button></a>
+        <a href="edit.html"><button>Edit Hero</button></a>
+      </div>
+
+      <div class="controls">
+        <label>
+          Sort by Power:
+          <input
+            type="checkbox"
+            id="sort-checkbox"
+            onchange="sortCheckbox(this)"
+          />
+        </label>
+        <!-- Видалили другу кнопку Average Power з цього блоку -->
+      </div>
+
+      <div id="showroom" class="hero-list"></div>
+
+      <div class="footer">
+        <p>Total Power Counter: <span id="total-power">0</span></p>
+        <button onclick="alertAveragePower()">Average Power</button>
+      </div>
+    </div>
+
+    <script>
+      class Hero {
+        constructor(id, name, power, description, image) {
+          this.id = id;
+          this.name = name;
+          this.power = power;
+          this.description = description;
+          this.image = image;
+        }
+      }
+
+      let showroomList = [];
+      let currentList = [];
+
+      // Завантажуємо дані з API при завантаженні сторінки
+      const loadData = async () => {
+        try {
+          const response = await fetch("http://localhost:3000/heros");
+          if (!response.ok) throw new Error("Failed to fetch heros");
+
+          showroomList = await response.json();
+          drawList(showroomList);
+        } catch (error) {
+          console.error("Error loading heros:", error);
+        }
+      };
+
+      document.addEventListener("DOMContentLoaded", loadData); // Завантажуємо дані під час ініціалізації сторінки
+
+      const drawList = (list) => {
+        const showroom = document.getElementById("showroom");
+        showroom.innerHTML = "";
+        let totalPower = 0;
+
+        list.forEach((el) => {
+          showroom.innerHTML += `  
+            <div id="showroom-${el.id}" class="hero-card">
+                <img src="${el.image}" alt="${el.name}">
+                <h3>${el.name}</h3>
+                <p>Power: ${el.power}</p>
+                <p>${el.description}</p>
+                <button onClick="deleteCard(${el.id})">Delete</button>
+            </div>
+          `;
+          totalPower += parseFloat(el.power);
+        });
+
+        document.getElementById("total-power").innerText =
+          totalPower.toFixed(2);
+      };
+
+      const clearSearch = () => {
+        drawList(showroomList);
+      };
+
+      const searchCard = () => {
+        const search = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+        currentList = showroomList.filter((el) =>
+          el.name.toLowerCase().includes(search)
+        );
+        drawList(currentList);
+      };
+
+      const deleteCard = async (heroId) => {
+        try {
+          await fetch(`http://localhost:3000/heros/${heroId}`, {
+            method: "DELETE",
+          });
+          showroomList = showroomList.filter((el) => el.id !== heroId); // Видаляємо з локального списку
+          drawList(showroomList); // Перемальовуємо список
+        } catch (error) {
+          console.error("Error deleting hero:", error);
+        }
+      };
+
+      const sortCheckbox = (checkbox) => {
+        if (checkbox.checked) {
+          currentList = [...showroomList];
+          currentList.sort((a, b) => a.power - b.power);
+          drawList(currentList);
+        } else {
+          drawList(showroomList);
+        }
+      };
+
+      const alertAveragePower = () => {
+        if (showroomList.length === 0) {
+          alert("No hero available to calculate the average power.");
+          return;
+        }
+
+        const average =
+          showroomList.reduce((acc, hero) => acc + parseFloat(hero.power), 0) /
+          showroomList.length;
+        alert(`Average Power: ${average.toFixed(2)}`);
+      };
+    </script>
+  </body>
+</html>
